@@ -124,8 +124,10 @@ end
       @jira_project.issues.each do |issue|       
         active = issue.status.name == 'In Progress'
         estimate = issue.timeoriginalestimate.present? ? (issue.timeoriginalestimate/3600) : 0
-        if @project.tasks.where(imported_from: issue.id).blank? && issue.status.name != "Done"           
-          @task = Task.create(code: issue.key, description: issue.summary, active: active, estimated_time: estimate, imported_from: issue.id, project_id: @project.id)            
+        if @project.tasks.where(imported_from: issue.id).blank? 
+          if issue.status.name != "Done"           
+            @task = Task.create(code: issue.key, description: issue.summary, active: active, estimated_time: estimate, imported_from: issue.id, project_id: @project.id)            
+          end
         else
           @task = Task.find_by_imported_from issue.id
           @task.code = issue.key
@@ -699,8 +701,10 @@ def add_configuration
           active = issue.status.name == 'In Progress'
           estimate = issue.timeoriginalestimate.present? ? (issue.timeoriginalestimate/3600) : 0
 
-          if  @projects.tasks.where(imported_from: issue.id).blank? && issue.status.name !='Done'           
+          if  @projects.tasks.where(imported_from: issue.id).blank? 
+            if issue.status.name !='Done'           
             @task = Task.create(code: issue.key, description: issue.summary, active: active, estimated_time: estimate, imported_from: issue.id, project_id: params[:project_id])            
+            end          
           else
             @task = Task.find_by_imported_from issue.id
             @task.code = issue.key

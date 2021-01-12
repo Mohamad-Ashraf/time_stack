@@ -23,6 +23,8 @@ class Project < ApplicationRecord
   has_many :shift_change_requests
   accepts_nested_attributes_for :tasks, allow_destroy: true
 
+  after_create :create_default_task
+
 
 
   
@@ -269,5 +271,11 @@ class Project < ApplicationRecord
     end
     date_arr = date_str.split("-") 
     return date_arr[2] + "/" + date_arr[0] + "/" + date_arr[1]
+  end
+
+
+  def create_default_task
+    self.tasks.build({code: "Default", description: "Default", active: true})
+    self.save
   end
 end
