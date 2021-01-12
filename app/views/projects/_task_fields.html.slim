@@ -14,7 +14,7 @@ tr.task-row
   td 
     = "#{task_remaining_hour(f.object.id)}"
   td.flag {style="width:100px;"}
-    = f.check_box 'active', :class =>'form-control active-flag', disabled:  f.object.imported_from.present? ? true :false
+    = f.check_box 'active', :class =>'form-control active-flag'
   td.billable {style="width:100px;"}
     = f.check_box :billable, class: "form-control"
   td.overtime {style="width:100px;"}
