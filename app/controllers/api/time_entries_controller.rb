@@ -65,7 +65,9 @@ module Api
 		api :POST, '/checkin_time_entry', "Checkin user time entry"
 		formats ['json']		
 			param :task_id, String, :desc => "Task ID", :required => true
-			param :project_id, String, :desc => "Project ID", :required => true			
+			param :project_id, String, :desc => "Project ID", :required => true		
+			param :user_id, String, :desc => "User ID", :required => true		
+			param :activity_log, String, :desc => "Activity Log", :required => true			
 			param :time_in, Time, :desc => "In time", :required => true
 			param :estimated_time_out, Time, :desc => "Estimated Out time", :required => true			
 			param :date_of_activity, String, :desc => "Date of activity", :required => true
@@ -75,6 +77,7 @@ module Api
 				@project_id =  params[:project_id]
 				@task_id =  params[:task_id]
 				@user_id =  params[:user_id]
+				@activity_log = params[:activity_log] 
 				@date_of_activity=params[:date_of_activity]
 				@time_in=params[:time_in]
 				@estimated_time_out=params[:estimated_time_out]				
@@ -88,15 +91,15 @@ module Api
 				          @timeEntry.task_id = @task_id
 				          @timeEntry.project_id = @project_id
 				          @timeEntry.updated_by = @user_id
+				          @timeEntry.activity_log = @activity_log
 				          @timeEntry.mobile_data = true
 				          @timeEntry.estimated_time_out=@estimated_time_out
-				          @timeEntry.save
-				          					 						# UPDATE
-						@success = 'true' 
+				          @timeEntry.save				          				          					 						
+				          # UPDATE
+						  @success = 'true' 
 					else
-						# INSERT
-						#@success =TimeEntry.new(time_entry_params(@time_entry.except(:id))).save
-						TimeEntry.create(project_id: @project_id,task_id: @task_id,date_of_activity: @date_of_activity,time_in: @time_in,week_id: @week.id,user_id: @user_id, updated_by: @user_id, mobile_data: true, estimated_time_out: @estimated_time_out)
+						# INSERT						
+						TimeEntry.create(project_id: @project_id,task_id: @task_id,date_of_activity: @date_of_activity,time_in: @time_in,week_id: @week.id,user_id: @user_id, updated_by: @user_id, mobile_data: true, estimated_time_out: @estimated_time_out, activity_log: @activity_log)
 						@success = 'true'
 					end
 
@@ -120,6 +123,7 @@ module Api
 
 		api :POST, '/checkout_time_entry', "Checkout user time entry"
 		formats ['json']		
+			param :user_id, String, :desc => "User ID", :required => true
 			param :task_id, String, :desc => "Task ID", :required => true
 			param :project_id, String, :desc => "Project ID", :required => true	
 			param :activity_log, String, :desc => "Task description", :required => true		
