@@ -692,28 +692,35 @@ def add_configuration
 
   end
   def refresh_task        
-      @projects = Project.find(params[:project_id])
-      @project_id = params[:project_id]
-      @adhoc = params["adhoc"]
-      if @projects.external_type_id.present?
-        @jira_project = Project.find_jira_projects(current_user.id, @projects.external_type_id)        
-        @jira_project.issues.each do |issue|        
-          active = issue.status.name == 'In Progress'
-          estimate = issue.timeoriginalestimate.present? ? (issue.timeoriginalestimate/3600) : 0
+    @projects = Project.find(params[:project_id])
+    @project_id = params[:project_id]
+    @adhoc = params["adhoc"]
+    @true_but_done = Array.new
+    if @projects.external_type_id.present?
+      @jira_project = Project.find_jira_projects(current_user.id, @projects.external_type_id)        
+      @jira_project.issues.each do |issue|        
+        active = issue.status.name == 'In Progress'
+        estimate = issue.timeoriginalestimate.present? ? (issue.timeoriginalestimate/3600) : 0
 
-          if  @projects.tasks.where(imported_from: issue.id).blank? 
-            if issue.status.name !='Done'           
-            @task = Task.create(code: issue.key, description: issue.summary, active: active, estimated_time: estimate, imported_from: issue.id, project_id: params[:project_id])            
-            end          
-          else
-            @task = Task.find_by_imported_from issue.id
-            @task.code = issue.key
-            @task.description = issue.summary
-            @task.estimated_time = estimate
-            @task.project_id =  params[:project_id]
-            @task.save
+        if  @projects.tasks.where(imported_from: issue.id).blank? 
+          if issue.status.name !='Done'           
+          @task = Task.create(code: issue.key, description: issue.summary, active: active, estimated_time: estimate, imported_from: issue.id, project_id: params[:project_id])            
+          end          
+        else
+          @task = Task.find_by_imported_from issue.id
+          @task.code = issue.key
+          @task.description = issue.summary
+          @task.estimated_time = estimate
+          @task.project_id =  params[:project_id]
+          @task.save
+
+          if issue.status.name =='Done'
+            if @task.active == true
+              @true_but_done.push(@task)
+              logger.debug(@true_but_done)
+            end
+          end
         end
-        
       end          
       @users_assignied_to_project = User.joins("LEFT OUTER JOIN projects_users ON users.id = projects_users.user_id AND projects_users.project_id = 1").select("users.email,first_name,email,users.id id,user_id, projects_users.project_id, projects_users.active,project_id")
       @tasks_on_project = Task.where(project_id: @project_id)
