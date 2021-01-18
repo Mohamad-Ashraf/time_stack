@@ -6,6 +6,7 @@ namespace :update_external_type_id_jira do
 		@userDetails.each do |u|
 			#if u.api_token.present?
 				@jira_project = Project.find_jira_projects(u.id)				
+				if @jira_project.present?
 				@jira_project.each do |project|  
 
 					@project = Project.where(external_type_id: nil, name: project.name, user_id: u.id).first     
@@ -30,7 +31,7 @@ namespace :update_external_type_id_jira do
 					      end
 					end
 				end
-			#end
+			end
 		end
 	end	
 end
