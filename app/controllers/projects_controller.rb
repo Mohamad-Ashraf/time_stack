@@ -223,7 +223,11 @@ end
     pp = project_params.delete("tasks_attributes")
     logger.debug "PROJECT PARAMS AFTER: #{project_params.inspect}"
     logger.debug "PROXY BABY: #{params["proxy"]}"
-
+    if params[:shift_id].present? 
+      unless ProjectShift.where(shift_id: params[:shift_id ] , project_id: params[:project_id]).present?
+      ProjectShift.create(shift_id: params[:shift_id], capacity: nil, location: nil, shift_supervisor_id: current_user.id , project_id: params[:project_id])
+      end
+    end
 
 	  @customers = Customer.all
     @tasks_on_project = Task.where(project_id: @project_id)
@@ -256,6 +260,7 @@ end
         format.json { render json: @project.errors, status: :unprocessable_entity }
       end
     end
+    
   end
 
   # DELETE /projects/1

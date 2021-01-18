@@ -13,6 +13,12 @@
   
     = f.hidden_field :customer_id, value: current_user.customer_id.present? ? current_user.customer_id : Customer.find_by_name("Resource Stack, Inc.").id
     = f.hidden_field :user_id, value: current_user.id
+    - if f.object.external_type_id.present?
+      = label_tag :select_shift 
+       
+      -if jira_project_shift(current_user.customer_id).present?
+        br
+        = select_tag(:shift_id, options_for_select(jira_project_shift(current_user.customer_id)))
   table.table border="1" id="tasklist"
     thead
       tr 
