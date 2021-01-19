@@ -319,7 +319,13 @@ jQuery ($) ->
   $("tbody").on("click", ".add-time", ->
     console.log("weeks.coffee add time")
     row = $(this).parent().parent("tr")
-    hour_field = row.children(".hour").children('.toggle')
+    
+
+    hour_field = row.children(".hour").children('.toggle')    
+    hr = row.find(".hour").children('div').children(".hours-input").val()    
+    if (!hr)
+      hr = row.find(".hour").children('div').children(".hours-input").val(0)    
+
     console.log("the row is " + hour_field)
     hour_field.toggle()
     $(this).html if $(this).text() == 'Enter Time' then 'Enter Hours' else 'Enter Time'
@@ -344,8 +350,8 @@ jQuery ($) ->
       hours = $('.hours-input')
       myhours = hours.find('.hours-input')
       console.log("Hours Worked", myhours.prevObject[index].value)
-      hr = myhours.prevObject[index].value
-      
+      hr = myhours.prevObject[index].value     
+
       partial = $('.partial_day')
       mypartial = partial.find('mypartial')
       console.log("partial", mypartial.prevObject[index].checked)
