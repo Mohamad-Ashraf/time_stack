@@ -63,6 +63,24 @@ module Api
 			end
 		end
 
+		api :GET, '/get_time_entry_status', "Get status for the time entry"		
+		def get_time_entry_status
+			begin				
+				@entry_detail = TimeEntry.where('user_id = ? and DATE(date_of_activity) = ? ', @user.id, Time.now.in_time_zone.strftime("%Y-%m-%d")).select("id as entryID,activity_log as description, hours as totalHours, project_id as projectID, task_id as taskID").as_json
+
+				render json: format_response_json({
+					message: 'Entry detail retrieved!',
+					status: true,
+					result: @entry_detail
+				})        
+			rescue
+			    render json: format_response_json({
+					message: 'Failed to retrieve time entry status!',
+					status: false
+				})
+			end
+		end
+
 		api :POST, '/checkin_time_entry', "Checkin user time entry"
 		formats ['json']		
 			param :task_id, String, :desc => "Task ID", :required => true
@@ -75,21 +93,20 @@ module Api
 				@project_id =  params[:project_id]
 				@task_id =  params[:task_id]
 				@activity_log = params[:activity_log] 
-				@estimated_time_out=params[:estimated_time_out]				
-				
-				@week=Week.where("user_id = ? and start_date <= ? AND end_date >= ?",  @user.id, Time.now.in_time_zone,Time.now.in_time_zone).first								
+				@estimated_time_out = params[:estimated_time_out]								
+				@week = Week.where("user_id = ? and start_date <= ? AND end_date >= ?",  @user.id, Time.now.in_time_zone,Time.now.in_time_zone).first								
 				#if @week.present?
 					@time_entry = TimeEntry.where("week_id = ? and user_id = ? and date_of_activity = ? and project_id = ? and task_id = ?", @week.id, @user.id, Time.now.in_time_zone, @project_id , @task_id).first					
-					@success = false
+					@success = false					
 					if @time_entry.present?
 						@timeEntry = TimeEntry.find_by_id @time_entry.id				          				          
 				        @timeEntry.time_in = Time.now.in_time_zone
 				          @timeEntry.task_id = @task_id
 				          @timeEntry.project_id = @project_id
-				          @timeEntry.updated_by = @user_id
+				          @timeEntry.updated_by = @user.id
 				          @timeEntry.activity_log = @activity_log
 				          @timeEntry.mobile_data = true
-				          @timeEntry.estimated_time_out= @estimated_time_out
+				          @timeEntry.estimated_time_out = @estimated_time_out
 				          @timeEntry.save				          				          					 						
 				          # UPDATE
 						  @success = 'true' 
@@ -139,7 +156,7 @@ module Api
 				@task_id =  params[:task_id]
 				@activity_log = params[:activity_log] 
 				
-				@week=Week.where("user_id = ? and start_date <= ? AND end_date >= ?",  @user_id,Time.now.in_time_zone,Time.now.in_time_zone).first
+				@week = Week.where("user_id = ? and start_date <= ? AND end_date >= ?",  @user.id,Time.now.in_time_zone,Time.now.in_time_zone).first
 					@time_entry = TimeEntry.where("week_id = ? and user_id = ? and date_of_activity = ? and project_id = ? and task_id = ?", @week.id, @user.id, Time.now.in_time_zone, @project_id , @task_id).first					
 					@success = false
 					if @time_entry.present?
@@ -148,7 +165,7 @@ module Api
 				          @timeEntry.task_id = @task_id
 				          @timeEntry.activity_log = @activity_log
 				          @timeEntry.project_id = @project_id
-				          @timeEntry.updated_by = @user_id
+				          @timeEntry.updated_by = @user.id
 				          @timeEntry.mobile_data = true
 				          @timeEntry.save				          					 						# UPDATE
 						@success = 'true' 
