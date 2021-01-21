@@ -48,6 +48,7 @@ class ProjectsController < ApplicationController
       @holiday_exceptions = @project.holiday_exceptions
       @adhoc_pm = User.where(id: @project.adhoc_pm_id).first
       @announcement = Announcement.where("active = true").last
+      @current_systems = ExternalConfiguration.where(user_id: current_user.id)
     elsif @adhoc_pm_project.present?
       @project = @adhoc_pm_project
       @applicable_week = Week.joins(:time_entries).where("(weeks.status_id = ? or weeks.status_id = ?) and time_entries.project_id= ? and time_entries.status_id=?", "2", "4",@adhoc_pm_project.id,"2").select(:id, :user_id, :start_date, :end_date , :comments).distinct
@@ -71,8 +72,9 @@ end
   def new
     @project = Project.new
     @users_on_project = User.where("parent_user_id IS null").all
+    user_detail =User.find(current_user.id)
     @customer = Customer.find current_user.customer_id
-    @configuration = @customer.external_configurations.where(system_type: 'jira').first
+    @configuration = user_detail.external_configurations.where(system_type: 'jira').first
 
   end
 
@@ -110,21 +112,29 @@ end
     if params[:system_type] == 'jira'
       @jira_project = Project.find_jira_projects(current_user.id, params[:system_project])
 
-      @project = Project.where(external_type_id: @jira_project.id, customer_id: params[:customer_id]).first
+      @project = Project.where(external_type_id: @jira_project.id, user_id: current_user.id).first
       unless @project.present?
         @project = Project.new
         @project.name = @jira_project.name
-        @project.customer_id = params[:customer_id]
+        @project.customer_id = current_user.customer_id
         @project.user_id = current_user.id
         @project.external_type_id = @jira_project.id
         @project.save
       end 
-      @jira_project.issues.each do |issue|
-        
-        if issue.status.name == 'In Progress'
-          unless @project.tasks.where(imported_from: issue.id).present?
-            @project.tasks.build(code: issue.key, description: issue.summary, active: true, imported_from: issue.id )
+      @jira_project.issues.each do |issue|       
+        active = issue.status.name == 'In Progress'
+        estimate = issue.timeoriginalestimate.present? ? (issue.timeoriginalestimate/3600) : 0
+        if @project.tasks.where(imported_from: issue.id).blank? 
+          if issue.status.name != "Done"           
+            @task = Task.create(code: issue.key, description: issue.summary, active: active, estimated_time: estimate, imported_from: issue.id, project_id: @project.id)            
           end
+        else
+          @task = Task.find_by_imported_from issue.id
+          @task.code = issue.key
+          @task.active = active
+          @task.description = issue.summary
+          @task.estimated_time = estimate
+          @task.save
         end
       end
 
@@ -196,22 +206,28 @@ end
         logger.debug "id: #{t[1]["id"]}"
         if t[1]["id"].blank?
           logger.debug "ID IS NILLLLLLLL"
-          t[1]["id"] = Task.all.count + 1
-        end
-        if Task.where(id: t[1]["id"]).present?
+         # t[1]["id"] = Task.all.count + 1
+        end        
+        if Task.where(id: t[1]["id"]).present? && !t[1]["imported_from"].present? 
           @task = Task.find(t[1]["id"]).update(code: t[1]["code"], description: t[1]["description"], default_comment: t[1]["default_comment"], active: t[1]["active"], billable: t[1]["billable"], estimated_time: t[1]["estimated_time"], overtime: t[1]["overtime"], imported_from: t[1]["imported_from"])
+        elsif t[1]["imported_from"].present?
+          @task = Task.find(t[1]["id"]).update( default_comment: t[1]["default_comment"], billable: t[1]["billable"], overtime: t[1]["overtime"])
+                   
         else
-          @task = Task.create(id: t[1]["id"], code: t[1]["code"], description: t[1]["description"], default_comment: t[1]["default_comment"], active: t[1]["active"], billable: t[1]["billable"],estimated_time: t[1]["estimated_time"], overtime: t[1]["overtime"], imported_from: t[1]["imported_from"], project_id: @project.id)
+          @task = Task.create(code: t[1]["code"], description: t[1]["description"], default_comment: t[1]["default_comment"], active: t[1]["active"], billable: t[1]["billable"],estimated_time: t[1]["estimated_time"], overtime: t[1]["overtime"], imported_from: t[1]["imported_from"], project_id: @project.id)
         end
       end
     end
-
     logger.debug("############################ the tasks code in projects CONTROLLER #{@task.inspect}")
     logger.debug "PROJECT PARAMS: #{project_params.inspect}"
     pp = project_params.delete("tasks_attributes")
     logger.debug "PROJECT PARAMS AFTER: #{project_params.inspect}"
     logger.debug "PROXY BABY: #{params["proxy"]}"
-
+    if params[:shift_id].present? 
+      unless ProjectShift.where(shift_id: params[:shift_id ] , project_id: params[:project_id]).present?
+      ProjectShift.create(shift_id: params[:shift_id], capacity: nil, location: nil, shift_supervisor_id: current_user.id , project_id: params[:project_id])
+      end
+    end
 
 	  @customers = Customer.all
     @tasks_on_project = Task.where(project_id: @project_id)
@@ -232,6 +248,7 @@ end
     @adhoc_pm = User.where(id: @project.adhoc_pm_id).first
     @project = Project.includes(:tasks).find(params[:id])
     @projects = Project.where(id: params[:project_id])
+    @current_systems = ExternalConfiguration.where(user_id: current_user.id)
     @available_users = User.where("parent_user_id IS ? && (customer_id IS ? OR customer_id = ?)", nil, nil , @project.customer.id)
     respond_to do |format|
       if @project.update(customer_id: project_params["customer_id"], proxy: params["proxy"], deactivate_notifications: @notifications)
@@ -243,6 +260,7 @@ end
         format.json { render json: @project.errors, status: :unprocessable_entity }
       end
     end
+    
   end
 
   # DELETE /projects/1
@@ -651,17 +669,66 @@ end
       format.js
     end
   end
+def add_configuration
+      @configuration = ExternalConfiguration.where(system_type: params[:system_type], user_id: current_user.id).first
+      unless @configuration.present?
+        @configuration = ExternalConfiguration.new
+        @configuration.system_type = params[:system_type]
+        @configuration.url = params[:url]
+        @configuration.jira_email = params[:jira_email]
+        @configuration.password = params[:password]
+        @configuration.confirm_password = params[:confirm_password]
+        @configuration.user_id = current_user.id
+        @configuration.created_by = current_user.id
+        @configuration.api_token = params[:api_token]
+        @configuration.save
+      end
+    @current_systems = ExternalConfiguration.where(user_id: current_user.id)
 
-  def dynamic_project_update
-    logger.debug("project-dynamic_project_update- PROJECT ID IS #{params.inspect}")
+    respond_to do |format|
+      format.js
+    end
+  end
+
+  def remove_configuration
+      @configuration = ExternalConfiguration.find(params[:sys_id])
+      @configuration.destroy   
+    @current_systems = ExternalConfiguration.where(user_id: current_user.id)
+
+  end
+  def refresh_task        
+    @projects = Project.find(params[:project_id])
     @project_id = params[:project_id]
     @adhoc = params["adhoc"]
-    logger.debug("project-dynamic_project_update- @project_id #{@project_id}")
+    @true_but_done = Array.new
+    if @projects.external_type_id.present?
+      @jira_project = Project.find_jira_projects(current_user.id, @projects.external_type_id)        
+      @jira_project.issues.each do |issue|        
+        active = issue.status.name == 'In Progress'
+        estimate = issue.timeoriginalestimate.present? ? (issue.timeoriginalestimate/3600) : 0
 
-    #@projects = Project.where(user_id: current_user.id)
-    #logger.debug("project-dynamic_project_update- PROJECT ID IS #{@projects.inspect} ********#{@projects.first.id} ")
-    @users_assignied_to_project = User.joins("LEFT OUTER JOIN projects_users ON users.id = projects_users.user_id AND projects_users.project_id = 1").select("users.email,first_name,email,users.id id,user_id, projects_users.project_id, projects_users.active,project_id")
-    @tasks_on_project = Task.where(project_id: @project_id)
+        if  @projects.tasks.where(imported_from: issue.id).blank? 
+          if issue.status.name !='Done'           
+          @task = Task.create(code: issue.key, description: issue.summary, active: active, estimated_time: estimate, imported_from: issue.id, project_id: params[:project_id])            
+          end          
+        else
+          @task = Task.find_by_imported_from issue.id
+          @task.code = issue.key
+          @task.description = issue.summary
+          @task.estimated_time = estimate
+          @task.project_id =  params[:project_id]
+          @task.save
+
+          if issue.status.name =='Done'
+            if @task.active == true
+              @true_but_done.push(@task)
+              logger.debug(@true_but_done)
+            end
+          end
+        end
+      end          
+      @users_assignied_to_project = User.joins("LEFT OUTER JOIN projects_users ON users.id = projects_users.user_id AND projects_users.project_id = 1").select("users.email,first_name,email,users.id id,user_id, projects_users.project_id, projects_users.active,project_id")
+      @tasks_on_project = Task.where(project_id: @project_id)
     # @applicable_week = Week.joins(:time_entries).where("(weeks.status_id = ? or weeks.status_id = ?) and time_entries.project_id= ? and time_entries.status_id=?", "2", "4","1","2").select(:id, :user_id, :start_date, :end_date , :comments).distinct
      @user_projects = Project.where(user_id: current_user.id)
   
@@ -692,6 +759,55 @@ end
     @adhoc_pm_project = @project
     @projects = Project.where(id: @project_id)
     @adhoc_pm = User.where(id: @project.adhoc_pm_id).first
+    @current_systems = ExternalConfiguration.where(user_id: current_user.id)
+    respond_to do |format|  
+      format.js
+    end
+       # redirect_to projects_path
+    end
+  end
+  def dynamic_project_update
+    logger.debug("project-dynamic_project_update- PROJECT ID IS #{params.inspect}")
+    @project_id = params[:project_id]
+    @adhoc = params["adhoc"]
+    logger.debug("project-dynamic_project_update- @project_id #{@project_id}")
+
+    #@projects = Project.where(user_id: current_user.id)
+    #logger.debug("project-dynamic_project_update- PROJECT ID IS #{@projects.inspect} ********#{@projects.first.id} ")
+    @users_assignied_to_project = User.joins("LEFT OUTER JOIN projects_users ON users.id = projects_users.user_id AND projects_users.project_id = 1").select("users.email,first_name,email,users.id id,user_id, projects_users.project_id, projects_users.active,project_id")
+    @tasks_on_project = Task.where(project_id: @project_id)
+
+    # @applicable_week = Week.joins(:time_entries).where("(weeks.status_id = ? or weeks.status_id = ?) and time_entries.project_id= ? and time_entries.status_id=?", "2", "4","1","2").select(:id, :user_id, :start_date, :end_date , :comments).distinct
+     @user_projects = Project.where(user_id: current_user.id)
+  
+
+    @customers = Customer.all
+    @project = Project.includes(:tasks).find(@project_id)
+    #@applicable_week = Week.joins(:time_entries).where("(weeks.status_id = ? or weeks.status_id = ?) and time_entries.project_id= ? and time_entries.status_id=?", "2", "4",@project_id,"2").select(:id, :user_id, :start_date, :end_date , :comments).distinct
+    @users_on_project = User.joins("LEFT OUTER JOIN projects_users ON users.id = projects_users.user_id AND current_shift is true AND projects_users.project_id = #{@project.id}").select("users.email,first_name,email,users.id id,user_id, projects_users.project_id, projects_users.active,project_id")
+    #@available_users = User.where("customer_id IS ? OR customer_id = ?", nil , @project.customer.id)
+    available_users = User.where("parent_user_id IS ? && (customer_id IS ? OR customer_id = ?)", nil, nil , @project.customer.id) 
+    shared_users = SharedEmployee.where(customer_id: @project.customer.id).collect{|u| u.user_id}
+    shared_user_array = Array.new
+    shared_users.each do |su|
+      u = User.find(su)
+      shared_user_array.push(u)
+    end
+    @shift_change_requests = ShiftChangeRequest.where("status = ?", "Requested")
+    logger.debug("AVAIALABLE SHARED USERS #{shared_users.inspect}, The USER IS #{shared_user_array.inspect}")
+    @available_users = available_users + shared_user_array
+    @users = User.where("parent_user_id IS null").all
+    @invited_users = User.where("invited_by_id = ?", current_user.id)
+    @proxies = User.where("customer_id =? and proxy = ?", @project.customer.id, true)
+    @customer = Customer.find(@project.customer_id)
+    customer_holiday_ids = CustomersHoliday.where(customer_id: @project.customer.id).pluck(:holiday_id)
+    @holidays = Holiday.where(global:true).or(Holiday.where(id: customer_holiday_ids))
+    @holiday_exception = HolidayException.new
+    @holiday_exceptions = @project.holiday_exceptions
+    @adhoc_pm_project = @project
+    @projects = Project.where(id: @project_id)
+    @adhoc_pm = User.where(id: @project.adhoc_pm_id).first
+    @current_systems = ExternalConfiguration.where(user_id: current_user.id)
     respond_to do |format|  
       format.js
     end
