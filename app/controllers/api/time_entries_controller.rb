@@ -96,7 +96,7 @@ module Api
 				@estimated_time_out = params[:estimated_time_out]								
 				@week = Week.where("user_id = ? and start_date <= ? AND end_date >= ?",  @user.id, Time.now.in_time_zone,Time.now.in_time_zone).first								
 				#if @week.present?
-					@time_entry = TimeEntry.where("week_id = ? and user_id = ? and date_of_activity = ? and project_id = ? and task_id = ?", @week.id, @user.id, Time.now.in_time_zone, @project_id , @task_id).first					
+					@time_entry = TimeEntry.where("week_id = ? and user_id = ? and DATE(date_of_activity) = ? and project_id = ? and task_id = ?", @week.id, @user.id, Time.now.in_time_zone.strftime("%Y-%m-%d"), @project_id , @task_id).first					
 					@success = false					
 					if @time_entry.present?
 						@timeEntry = TimeEntry.find_by_id @time_entry.id				          				          
