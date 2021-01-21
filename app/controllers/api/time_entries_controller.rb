@@ -157,30 +157,26 @@ module Api
 				@activity_log = params[:activity_log] 
 				
 				@week = Week.where("user_id = ? and start_date <= ? AND end_date >= ?",  @user.id,Time.now.in_time_zone,Time.now.in_time_zone).first
-					@time_entry = TimeEntry.where("week_id = ? and user_id = ? and date_of_activity = ? and project_id = ? and task_id = ?", @week.id, @user.id, Time.now.in_time_zone, @project_id , @task_id).first					
-					@success = false
-					if @time_entry.present?
-						 @timeEntry = TimeEntry.find_by_id @time_entry.id				          				          
-				          @timeEntry.time_out = Time.now.in_time_zone
-				          @timeEntry.task_id = @task_id
-				          @timeEntry.activity_log = @activity_log
-				          @timeEntry.project_id = @project_id
-				          @timeEntry.updated_by = @user.id
-				          @timeEntry.mobile_data = true
-				          @timeEntry.save				          					 						# UPDATE
-						@success = 'true' 
-					else
-						render json: format_response_json({
-							message: 'Failed to checkout!',
-							status: false
-						})
-					end
-
-					render json: format_response_json({
-						message:@success? "Checkout successfully!" : "Failed to checkout!",
-						status: @success
-					})
+				@time_entry = TimeEntry.where("week_id = ? and user_id = ? and date_of_activity = ? and project_id = ? and task_id = ?", @week.id, @user.id, Time.now.in_time_zone, @project_id , @task_id).first					
+				@success = false
+				if @time_entry.present?
+					 @timeEntry = TimeEntry.find_by_id @time_entry.id				          				          
+			          @timeEntry.time_out = Time.now.in_time_zone
+			          @timeEntry.task_id = @task_id
+			          @timeEntry.activity_log = @activity_log
+			          @timeEntry.project_id = @project_id
+			          @timeEntry.updated_by = @user.id
+			          @timeEntry.mobile_data = true
+			          @timeEntry.save				          					 						# UPDATE
+					@success = 'true' 
 				
+				end
+
+				render json: format_response_json({
+					message:@success? "Checkout successfully!" : "Failed to checkout!",
+					status: @success
+				})
+			
 			rescue
 			    render json: format_response_json({
 					message: 'Failed to checkout!',
