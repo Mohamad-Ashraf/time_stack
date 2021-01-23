@@ -246,27 +246,27 @@ class WeeksController < ApplicationController
 
   def time_entry_week_hours          
      @hours = params[:hours]
-     @user_id = current_user.id
+
      @week = Week.find(params[:week_id])     
+     
      @week_user = User.find(@week.user_id)
-     @time_entries = TimeEntry.where("user_id= ? and week_id= ?",@week.user_id,params[:week_id])
+     
+     @time_entries = TimeEntry.where("user_id= ? and week_id= ?",current_user.id,@week.id)
      if @time_entries.present?
         time_entry_days = @time_entries.count
-        @dayhour = @hours.to_i/time_entry_days
+        @dayhour = (@hours.to_f/time_entry_days).round(1)
       end      
      @time_entries.each do |time_entry|
       time_entry.hours = @dayhour
-      time_entry.project_id = @week_user.default_project
-      time_entry.task_id = @week_user.default_task 
+      time_entry.project_id = current_user.default_project
+      time_entry.task_id = current_user.default_task 
       time_entry.status_id = 5
       time_entry.save
 
      end
-      @week.proxy_user_id = current_user.id
-      @week.proxy_updated_date = Time.now
       @week.status_id=5
       @week.save
-    redirect_to root_path
+      redirect_to root_path
   end
 
   def previous_comments

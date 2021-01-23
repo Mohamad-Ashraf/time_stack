@@ -17,10 +17,8 @@
 	        td = week.start_date.strftime('%Y-%m-%d')
 	        td = week.end_date.strftime('%Y-%m-%d')
 	        td 
-	        	-if find_status(week) != "NEW"
-		       		 = link_to find_status(week), find_status(week) == "NEW" || "REJECTED" ?  edit_week_path(week): week_path(week) 
-		       	-else
-		        	= link_to "0", 'javascript:void(0);', class: "week_time_entry", id: "#{week.id}"
+	        	
+		        = link_to "#{total_hours(week)}", 'javascript:void(0);', class: "week_time_entry", id: "#{week.id}"
 		        	
 
 			td = link_to "Report", "/weeks/#{week.id}/report" if (find_status(week) == "SUBMITTED") || (find_status(week) == "APPROVED")
