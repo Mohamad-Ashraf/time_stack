@@ -198,7 +198,7 @@ class WeeksController < ApplicationController
     #@week = Week.eager_load(:time_entries).where("weeks.id = ? and time_entries.user_id = ?", params[:id], current_user.id).take
     @week = Week.find(params[:id])
     @user_id = current_user.id
-    @week_user = User.find(@week.user_id)
+    @week_user = User.find(@week.user_id)    
     logger.debug("WEEK USER IS: #{@week_user.inspect}")
     if @week.status_id == 4
       logger.debug "THE STATUS IS FOOOOOOOOUOUOUOUOUOUOUOUOUOUOUOUOUUOUOUOUOOUOUOUR"
@@ -244,9 +244,37 @@ class WeeksController < ApplicationController
     end
   end
 
+  def time_entry_week_hours  
+        
+     @week_id = params[:week_id]
+     @hours = params[:hours]
+     @week = Week.find(params[:week_id])
+     @user_id = current_user.id
+     @week_user = User.find(@week.user_id)
+     @time_entries = TimeEntry.where("user_id= ? and week_id= ?",@user_id,params[:week_id]).limit(10)
+     if @time_entries.present?
+        time_entry_days = @time_entries.count
+        @dayhour = @hours.to_i/time_entry_days
+      end      
+     @time_entries.each do |time_entry|
+      time_entry.hours = @dayhour
+      time_entry.project_id = @week_user.default_project
+      time_entry.task_id = @week_user.default_task 
+      time_entry.status_id = 5
+      time_entry.save
+
+     end
+      @week.proxy_user_id = current_user.id
+      @week.proxy_updated_date = Time.now
+      @week.status_id=5
+      @week.save
+    redirect_to root_path
+  end
+
   def previous_comments
      @wuser = params[:user_id]
      @week_id = params[:week_id]
+
      @t = TimeEntry.where.not(activity_log: "").where("user_id= ?",params[:user_id]).order(created_at: :desc) .limit(10)
      @t.each do |t|
       logger.debug("PRINT T #{t.inspect}")
@@ -258,6 +286,8 @@ class WeeksController < ApplicationController
      #@t = TimeEntry.find(@t.activity_log)
 
   end
+
+
 
   def add_previous_comments
     #@wuser = User.find(params[:id])
