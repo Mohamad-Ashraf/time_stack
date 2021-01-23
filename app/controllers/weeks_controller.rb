@@ -244,14 +244,12 @@ class WeeksController < ApplicationController
     end
   end
 
-  def time_entry_week_hours  
-        
-     @week_id = params[:week_id]
+  def time_entry_week_hours          
      @hours = params[:hours]
-     @week = Week.find(params[:week_id])
      @user_id = current_user.id
+     @week = Week.find(params[:week_id])     
      @week_user = User.find(@week.user_id)
-     @time_entries = TimeEntry.where("user_id= ? and week_id= ?",@user_id,params[:week_id]).limit(10)
+     @time_entries = TimeEntry.where("user_id= ? and week_id= ?",@week.user_id,params[:week_id])
      if @time_entries.present?
         time_entry_days = @time_entries.count
         @dayhour = @hours.to_i/time_entry_days
