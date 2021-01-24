@@ -253,15 +253,19 @@ class WeeksController < ApplicationController
      
      @time_entries = TimeEntry.where("user_id= ? and week_id= ?",current_user.id,@week.id)
      if @time_entries.present?
-        time_entry_days = @time_entries.count
+        time_entry_days = @time_entries.count - 2
         @dayhour = (@hours.to_f/time_entry_days).round(1)
       end      
      @time_entries.each do |time_entry|
-      time_entry.hours = @dayhour
-      time_entry.project_id = current_user.default_project
-      time_entry.task_id = current_user.default_task 
-      time_entry.status_id = 5
-      time_entry.save
+      if time_entry.date_of_activity.wday == 6
+      elsif time_entry.date_of_activity.wday == 0
+      else
+        time_entry.hours = @dayhour
+        time_entry.project_id = current_user.default_project
+        time_entry.task_id = current_user.default_task 
+        time_entry.status_id = 5
+        time_entry.save
+      end
 
      end
       @week.status_id=5
