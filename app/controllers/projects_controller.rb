@@ -110,7 +110,7 @@ end
       redirect to new_project_path
     end
     if params[:system_type] == 'jira'
-      @jira_project = Project.find_jira_projects(current_user.id, params[:system_project])
+      @jira_project = Project.find_jira_projects(current_user.id)
 
       @project = Project.where(external_type_id: @jira_project.id, user_id: current_user.id).first
       unless @project.present?
