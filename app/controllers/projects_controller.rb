@@ -115,9 +115,9 @@ end
       if  @jira_project.present?
           @project = Project.where(external_type_id: @jira_project.id, user_id: current_user.id).first
           unless @project.present?
-            @project = Project.where(external_type_id: nil, name: project.name, user_id: current_user.id).first
+            @project = Project.where(external_type_id: nil, name: @jira_project.name, user_id: current_user.id).first
             if @project.present?
-                    @project.external_type_id = project.id
+                    @project.external_type_id = @jira_project.id
                     @project.save
             else
                 @project = Project.new
@@ -133,7 +133,7 @@ end
             estimate = issue.timeoriginalestimate.present? ? (issue.timeoriginalestimate/3600) : 0
             if @project.tasks.where(imported_from: issue.id).blank? 
               if issue.status.name != "Done"   
-                @task =@project.tasks.where(imported_from: nil, description: issue.summary).first
+                @task_details =@project.tasks.where(imported_from: nil, description: issue.summary).first
                 if @task_details.present?                     
                             @task_details.code = issue.key
                             @task_details.active = active
@@ -737,7 +737,7 @@ def add_configuration
 
         if  @projects.tasks.where(imported_from: issue.id).blank? 
           if issue.status.name !='Done'           
-            @task =@project.tasks.where(imported_from: nil, description: issue.summary).first
+            @task_details =@project.tasks.where(imported_from: nil, description: issue.summary).first
             if @task_details.present?                     
                         @task_details.code = issue.key
                         @task_details.active = active
