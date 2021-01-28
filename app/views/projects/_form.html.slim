@@ -111,7 +111,8 @@
 							  	      =x.description
 
 				<input  type="text" placeholder="search task id or description..." style="width:30em;height:3em;margin-bottom:10px;" id="mytaskInput" onkeyup="mytaskfunc()" />
-				div = link_to "Refresh Task", 'javascript:void(0)',class: "btn btn-primary refresh_task" ,id: "#{@project.id}"
+				- if @project.external_type_id.present?
+					div = link_to "Refresh Task", 'javascript:void(0)',class: "btn btn-primary refresh_task" ,id: "#{@project.id}"
 				table class="center-row table " id="tasklist"
 					thead
 					  tr 

@@ -112,32 +112,51 @@ end
     if params[:system_type] == 'jira'
       @jira_project = Project.find_jira_projects(current_user.id, params[:system_project])
 
-      @project = Project.where(external_type_id: @jira_project.id, user_id: current_user.id).first
-      unless @project.present?
-        @project = Project.new
-        @project.name = @jira_project.name
-        @project.customer_id = current_user.customer_id
-        @project.user_id = current_user.id
-        @project.external_type_id = @jira_project.id
-        @project.save
-      end 
-      @jira_project.issues.each do |issue|       
-        active = issue.status.name == 'In Progress'
-        estimate = issue.timeoriginalestimate.present? ? (issue.timeoriginalestimate/3600) : 0
-        if @project.tasks.where(imported_from: issue.id).blank? 
-          if issue.status.name != "Done"           
-            @task = Task.create(code: issue.key, description: issue.summary, active: active, estimated_time: estimate, imported_from: issue.id, project_id: @project.id)            
+      if  @jira_project.present?
+          @project = Project.where(external_type_id: @jira_project.id, user_id: current_user.id).first
+          unless @project.present?
+            @project = Project.where(external_type_id: nil, name: @jira_project.name, user_id: current_user.id).first
+            if @project.present?
+                    @project.external_type_id = @jira_project.id
+                    @project.save
+            else
+                @project = Project.new
+                @project.name = @jira_project.name
+                @project.customer_id = current_user.customer_id
+                @project.user_id = current_user.id
+                @project.external_type_id = @jira_project.id
+                @project.save
+            end
+          end 
+          @jira_project.issues.each do |issue|       
+            active = issue.status.name == 'In Progress'
+            estimate = issue.timeoriginalestimate.present? ? (issue.timeoriginalestimate/3600) : 0
+            if @project.tasks.where(imported_from: issue.id).blank? 
+              if issue.status.name != "Done"   
+                @task_details =@project.tasks.where(imported_from: nil, description: issue.summary).first
+                if @task_details.present?                     
+                            @task_details.code = issue.key
+                            @task_details.active = active
+                            @task_details.estimated_time = estimate
+                            @task_details.imported_from = issue.id
+                            @task_details.save
+                else        
+                  @task = Task.create(code: issue.key, description: issue.summary, active: active, estimated_time: estimate, imported_from: issue.id, project_id: @project.id)            
+                end
+              end
+            else
+              @task = Task.find_by_imported_from issue.id
+              @task.code = issue.key
+              @task.active = active
+              @task.description = issue.summary
+              @task.estimated_time = estimate
+              @task.save
+            end
           end
-        else
-          @task = Task.find_by_imported_from issue.id
-          @task.code = issue.key
-          @task.active = active
-          @task.description = issue.summary
-          @task.estimated_time = estimate
-          @task.save
-        end
+      else
+        flash[:alert] = 'Unable to Import Project Not Found'
+        return redirect_to(new_project_path) 
       end
-
     end
     
     @customers = Customer.all
@@ -214,7 +233,16 @@ end
           @task = Task.find(t[1]["id"]).update( default_comment: t[1]["default_comment"], billable: t[1]["billable"], overtime: t[1]["overtime"], active: t[1]["active"])
                    
         else
-          @task = Task.create(code: t[1]["code"], description: t[1]["description"], default_comment: t[1]["default_comment"], active: t[1]["active"], billable: t[1]["billable"],estimated_time: t[1]["estimated_time"], overtime: t[1]["overtime"], imported_from: t[1]["imported_from"], project_id: @project.id)
+            @task_details =@project.tasks.where(imported_from: nil, description: issue.summary).first
+            if @task_details.present?                     
+                        @task_details.code = issue.key
+                        @task_details.active = active
+                        @task_details.estimated_time = estimate
+                        @task_details.imported_from = issue.id
+                        @task_details.save
+            else
+            @task = Task.create(code: t[1]["code"], description: t[1]["description"], default_comment: t[1]["default_comment"], active: t[1]["active"], billable: t[1]["billable"],estimated_time: t[1]["estimated_time"], overtime: t[1]["overtime"], imported_from: t[1]["imported_from"], project_id: @project.id)
+            end
         end
       end
     end
@@ -709,7 +737,16 @@ def add_configuration
 
         if  @projects.tasks.where(imported_from: issue.id).blank? 
           if issue.status.name !='Done'           
-          @task = Task.create(code: issue.key, description: issue.summary, active: active, estimated_time: estimate, imported_from: issue.id, project_id: params[:project_id])            
+            @task_details =@project.tasks.where(imported_from: nil, description: issue.summary).first
+            if @task_details.present?                     
+                        @task_details.code = issue.key
+                        @task_details.active = active
+                        @task_details.estimated_time = estimate
+                        @task_details.imported_from = issue.id
+                        @task_details.save
+            else
+            @task = Task.create(code: issue.key, description: issue.summary, active: active, estimated_time: estimate, imported_from: issue.id, project_id: params[:project_id])            
+            end
           end          
         else
           @task = Task.find_by_imported_from issue.id
@@ -718,7 +755,6 @@ def add_configuration
           @task.estimated_time = estimate
           @task.project_id =  params[:project_id]
           @task.save
-
           if issue.status.name =='Done'
             if @task.active == true
               @true_but_done.push(@task)
