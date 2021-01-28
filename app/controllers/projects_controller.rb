@@ -233,7 +233,7 @@ end
           @task = Task.find(t[1]["id"]).update( default_comment: t[1]["default_comment"], billable: t[1]["billable"], overtime: t[1]["overtime"], active: t[1]["active"])
                    
         else
-            @task =@project.tasks.where(imported_from: nil, description: issue.summary).first
+            @task_details =@project.tasks.where(imported_from: nil, description: issue.summary).first
             if @task_details.present?                     
                         @task_details.code = issue.key
                         @task_details.active = active
