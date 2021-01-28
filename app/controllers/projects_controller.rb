@@ -113,21 +113,26 @@ end
       @jira_project = Project.find_jira_projects(current_user.id, params[:system_project])
 
       if  @jira_project.present?
-          @project = Project.where(external_type_id: @jira_project.id, user_id: current_user.id).first
-          unless @project.present?
-            @project = Project.where(external_type_id: nil, name: @jira_project.name, user_id: current_user.id).first
-            if @project.present?
-                    @project.external_type_id = @jira_project.id
-                    @project.save
-            else
-                @project = Project.new
-                @project.name = @jira_project.name
-                @project.customer_id = current_user.customer_id
-                @project.user_id = current_user.id
-                @project.external_type_id = @jira_project.id
-                @project.save
-            end
-          end 
+          internal_project = Project.where(external_type_id: @jira_project.id, user_id: current_user.id).first
+          internal_project_name = Project.where(external_type_id: nil, name: @jira_project.name, user_id: current_user.id).first
+          if internal_project.present?
+            internal_project.external_type_id = @jira_project.id
+            internal_project.save
+            @project = internal_project
+          elsif @internal_project_name.present?
+            internal_project_name.external_type_id = @jira_project.id
+            internal_project_name.save
+            @project = internal_project_name
+          else
+            project = Project.new
+            project.name = @jira_project.name
+            project.customer_id = current_user.customer_id
+            project.user_id = current_user.id
+            project.external_type_id = @jira_project.id
+            project.save
+            @project = project
+          end
+          
           @jira_project.issues.each do |issue|       
             active = issue.status.name == 'In Progress'
             estimate = issue.timeoriginalestimate.present? ? (issue.timeoriginalestimate/3600) : 0
@@ -135,11 +140,11 @@ end
               if issue.status.name != "Done"   
                 @task_details =@project.tasks.where(imported_from: nil, description: issue.summary).first
                 if @task_details.present?                     
-                            @task_details.code = issue.key
-                            @task_details.active = active
-                            @task_details.estimated_time = estimate
-                            @task_details.imported_from = issue.id
-                            @task_details.save
+                  @task_details.code = issue.key
+                  @task_details.active = active
+                  @task_details.estimated_time = estimate
+                  @task_details.imported_from = issue.id
+                  @task_details.save
                 else        
                   @task = Task.create(code: issue.key, description: issue.summary, active: active, estimated_time: estimate, imported_from: issue.id, project_id: @project.id)            
                 end
