@@ -103,12 +103,87 @@ end
       
     #end
   end
+ def check_project_to_create_update
+    
+    if params[:jira_projects_list_ids].present?
+      k = params[:jira_projects_list_ids].keys     
+      begin
+      k.each do |i|
+         
+         @jira_project = Project.find_jira_projects(current_user.id, i)
+         shift= Shift.where(customer_id: current_user.customer_id).first
+          if  @jira_project.present?
+              internal_project = Project.where(external_type_id: @jira_project.id, user_id: current_user.id).first
+              internal_project_name = Project.where(external_type_id: nil, name: @jira_project.name, user_id: current_user.id).first
+              if internal_project.present?
+                internal_project.external_type_id = @jira_project.id
+                internal_project.save
+                @project = internal_project
+              elsif @internal_project_name.present?
+                internal_project_name.external_type_id = @jira_project.id
+                internal_project_name.save
+                @project = internal_project_name
+              else
+                project = Project.new
+                project.name = @jira_project.name
+                project.customer_id = current_user.customer_id
+                project.user_id = current_user.id
+                project.external_type_id = @jira_project.id
+                project.save
+                @project = project
+              end
+               if shift.present? 
+                unless ProjectShift.where(shift_id: shift.id , project_id: @project.id).present?
+                ProjectShift.create(shift_id: shift.id, capacity: nil, location: nil, shift_supervisor_id: current_user.id , project_id: @project.id)
+                end
+              end              
+              @jira_project.issues.each do |issue|       
+                debugger
+                active = issue.status.name == 'In Progress'
+                estimate = issue.timeoriginalestimate.present? ? (issue.timeoriginalestimate/3600) : 0
+                if @project.tasks.where(imported_from: issue.id).blank? 
+                  if issue.status.name != "Done"   
+                    @task_details =@project.tasks.where(imported_from: nil, description: issue.summary).first
+                    if @task_details.present?                     
+                      @task_details.code = issue.key
+                      @task_details.active = active
+                      @task_details.estimated_time = estimate
+                      @task_details.imported_from = issue.id
+                      @task_details.save
+                    else        
+                      @task = Task.create(code: issue.key, description: issue.summary, active: active, estimated_time: estimate, imported_from: issue.id, project_id: @project.id)            
+                    end
+                  end
+                else
+                  @task = Task.find_by_imported_from issue.id
+                  @task.code = issue.key
+                  @task.active = active
+                  @task.description = issue.summary
+                  @task.estimated_time = estimate
+                  @task.save
+                end
+              end
+            else
+              flash[:alert] = 'Unable to Import Project Not Found'
+              return redirect_to(new_project_path) 
+            end
+      end
+      rescue
+          flash[:alert] = 'We are not able to access tasks.'
+          return redirect_to projects_path
+    end
+    else
+      flash[:alert] = "You do not select any project"
+      redirect_to projects_path
+    end
+  end
 
   def create_project_from_system
     if  params[:system_type].blank? ||  params[:system_project].blank?
       flash[:error]= 'Please select the fields'
       redirect to new_project_path
     end
+    begin
     if params[:system_type] == 'jira'
       @jira_project = Project.find_jira_projects(current_user.id, params[:system_project])
 
@@ -163,7 +238,11 @@ end
         return redirect_to(new_project_path) 
       end
     end
-    
+    rescue
+          flash[:alert] = 'We are not able to access tasks.'
+          return redirect_to(new_project_path) 
+    end
+
     @customers = Customer.all
     @project_id = @project.id
     #render partial: 'new_form' 
@@ -717,7 +796,12 @@ def add_configuration
         @configuration.save
       end
     @current_systems = ExternalConfiguration.where(user_id: current_user.id)
-
+    if @current_systems.present?
+     @jira_projects_list = Project.find_jira_projects(current_user.id)
+     if @jira_projects_list == 'error'
+        @error = "Please update valid credentials"        
+      end
+    end    
     respond_to do |format|
       format.js
     end

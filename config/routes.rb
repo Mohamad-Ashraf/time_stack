@@ -114,6 +114,7 @@ Rails.application.routes.draw do
   get 'projects/:id/reject/:week_id' => 'projects#reject'
   get 'show_project_reports' => 'projects#show_project_reports'
   post 'add_multiple_users_to_project' => "projects#add_multiple_users_to_project"
+  post '/check_project_to_create_update' => 'projects#check_project_to_create_update'
   post 'remove_multiple_users_from_project' => "projects#remove_multiple_users_from_project"
   post 'shift_modal' => "projects#shift_modal"
   get 'show_shift_reports' => "shifts#show_shift_reports"
