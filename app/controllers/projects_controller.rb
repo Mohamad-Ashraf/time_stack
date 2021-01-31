@@ -137,8 +137,7 @@ end
                 ProjectShift.create(shift_id: shift.id, capacity: nil, location: nil, shift_supervisor_id: current_user.id , project_id: @project.id)
                 end
               end              
-              @jira_project.issues.each do |issue|       
-                debugger
+              @jira_project.issues.each do |issue|                       
                 active = issue.status.name == 'In Progress'
                 estimate = issue.timeoriginalestimate.present? ? (issue.timeoriginalestimate/3600) : 0
                 if @project.tasks.where(imported_from: issue.id).blank? 
