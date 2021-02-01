@@ -119,7 +119,7 @@ end
                 internal_project.external_type_id = @jira_project.id
                 internal_project.save
                 @project = internal_project
-              elsif @internal_project_name.present?
+              elsif internal_project_name.present?
                 internal_project_name.external_type_id = @jira_project.id
                 internal_project_name.save
                 @project = internal_project_name
@@ -136,8 +136,8 @@ end
                 unless ProjectShift.where(shift_id: shift.id , project_id: @project.id).present?
                 ProjectShift.create(shift_id: shift.id, capacity: nil, location: nil, shift_supervisor_id: current_user.id , project_id: @project.id)
                 end
-              end              
-              @jira_project.issues.each do |issue|                       
+              end
+              @jira_project.issues.each do |issue|
                 active = issue.status.name == 'In Progress'
                 estimate = issue.timeoriginalestimate.present? ? (issue.timeoriginalestimate/3600) : 0
                 if @project.tasks.where(imported_from: issue.id).blank? 
@@ -193,7 +193,7 @@ end
             internal_project.external_type_id = @jira_project.id
             internal_project.save
             @project = internal_project
-          elsif @internal_project_name.present?
+          elsif internal_project_name.present?
             internal_project_name.external_type_id = @jira_project.id
             internal_project_name.save
             @project = internal_project_name
