@@ -571,8 +571,14 @@ end
   def add_multiple_users_to_project
     logger.debug(" add_multiple_user_to_project - #{params.inspect}")
     @project = Project.find(params[:project_id])
-    @available_users = User.where("parent_user_id IS ? && (shared =? or customer_id IS ? OR customer_id = ?)",nil, true, nil , @project.customer.id)     
-    
+    available_users = User.where("parent_user_id IS ? && (shared =? or customer_id IS ? OR customer_id = ?)",nil, true, nil , @project.customer.id)     
+    shared_users = SharedEmployee.where(customer_id: @project.customer.id).collect{|u| u.user_id}
+    shared_user_array = Array.new
+    shared_users.each do |su|
+      u = User.find(su)
+      shared_user_array.push(u)
+    end
+    @available_users = available_users+ shared_user_array
     (0..(@available_users- @project.users.active_users).count).each  do |i|
 
       if params["add_user_id_#{i}"].present?
