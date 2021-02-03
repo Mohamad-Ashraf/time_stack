@@ -830,8 +830,8 @@ def add_configuration
         estimate = issue.timeoriginalestimate.present? ? (issue.timeoriginalestimate/3600) : 0
 
         if  @projects.tasks.where(imported_from: issue.id).blank? 
-          if issue.status.name !='Done'           
-            @task_details =@project.tasks.where(imported_from: nil, description: issue.summary).first
+          if issue.status.name !='Done'
+            @task_details =@projects.tasks.where(imported_from: nil, description: issue.summary).first
             if @task_details.present?                     
                         @task_details.code = issue.key
                         @task_details.active = active
@@ -857,6 +857,10 @@ def add_configuration
           end
         end
       end          
+      unless @true_but_done.present?
+          @refresh_massage ='Task updated successfully!'
+      end
+
       @users_assignied_to_project = User.joins("LEFT OUTER JOIN projects_users ON users.id = projects_users.user_id AND projects_users.project_id = 1").select("users.email,first_name,email,users.id id,user_id, projects_users.project_id, projects_users.active,project_id")
       @tasks_on_project = Task.where(project_id: @project_id)
     # @applicable_week = Week.joins(:time_entries).where("(weeks.status_id = ? or weeks.status_id = ?) and time_entries.project_id= ? and time_entries.status_id=?", "2", "4","1","2").select(:id, :user_id, :start_date, :end_date , :comments).distinct
