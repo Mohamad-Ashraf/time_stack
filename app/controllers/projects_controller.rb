@@ -826,9 +826,8 @@ def add_configuration
     if @projects.external_type_id.present?
       @jira_project = Project.find_jira_projects(current_user.id, @projects.external_type_id)        
       @jira_project.issues.each do |issue|        
-        active = issue.status.name == 'In Progress'
-        estimate = issue.timeoriginalestimate.present? ? (issue.timeoriginalestimate/3600) : 0
-
+        active = issue.status.name == 'In Progress'       
+       estimate = issue.timeoriginalestimate.present? ? (issue.timeoriginalestimate/3600) : issue.timeestimate.present? ? (issue.timeestimate/3600)  : 0
         if  @projects.tasks.where(imported_from: issue.id).blank? 
           if issue.status.name !='Done'
             @task_details =@projects.tasks.where(imported_from: nil, description: issue.summary).first
