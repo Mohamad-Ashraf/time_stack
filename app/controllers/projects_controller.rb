@@ -842,12 +842,12 @@ def add_configuration
             end
           end          
         else
-          @task = Task.find_by_imported_from issue.id
+          @task = @projects.tasks.where(imported_from: issue.id)
           @task.code = issue.key
           @task.description = issue.summary
           @task.estimated_time = estimate
           @task.project_id =  params[:project_id]
-          @task.save
+          @task.save          
           if issue.status.name =='Done'
             if @task.active == true
               @true_but_done.push(@task)
