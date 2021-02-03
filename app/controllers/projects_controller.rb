@@ -139,7 +139,7 @@ end
               end
               @jira_project.issues.each do |issue|
                 active = issue.status.name == 'In Progress'
-                estimate = issue.timeoriginalestimate.present? ? (issue.timeoriginalestimate/3600) : 0
+                estimate = issue.timeoriginalestimate.present? ? (issue.timeoriginalestimate/3600) : issue.timeestimate.present? ? (issue.timeestimate/3600)  : 0
                 if @project.tasks.where(imported_from: issue.id).blank? 
                   if issue.status.name != "Done"   
                     @task_details =@project.tasks.where(imported_from: nil, description: issue.summary).first
@@ -154,7 +154,7 @@ end
                     end
                   end
                 else
-                  @task = Task.find_by_imported_from issue.id
+                  @task = @project.tasks.where(imported_from: issue.id).first
                   @task.code = issue.key
                   @task.active = active
                   @task.description = issue.summary
@@ -209,10 +209,10 @@ end
           
           @jira_project.issues.each do |issue|       
             active = issue.status.name == 'In Progress'
-            estimate = issue.timeoriginalestimate.present? ? (issue.timeoriginalestimate/3600) : 0
+            estimate = issue.timeoriginalestimate.present? ? (issue.timeoriginalestimate/3600) : issue.timeestimate.present? ? (issue.timeestimate/3600)  : 0
             if @project.tasks.where(imported_from: issue.id).blank? 
               if issue.status.name != "Done"   
-                @task_details =@project.tasks.where(imported_from: nil, description: issue.summary).first
+                @task_details = @project.tasks.where(imported_from: nil, description: issue.summary).first
                 if @task_details.present?                     
                   @task_details.code = issue.key
                   @task_details.active = active
@@ -224,7 +224,7 @@ end
                 end
               end
             else
-              @task = Task.find_by_imported_from issue.id
+              @task = @project.tasks.where(imported_from: issue.id).first
               @task.code = issue.key
               @task.active = active
               @task.description = issue.summary
@@ -842,7 +842,7 @@ def add_configuration
             end
           end          
         else
-          @task = @projects.tasks.where(imported_from: issue.id)
+          @task = @projects.tasks.where(imported_from: issue.id).first
           @task.code = issue.key
           @task.description = issue.summary
           @task.estimated_time = estimate
