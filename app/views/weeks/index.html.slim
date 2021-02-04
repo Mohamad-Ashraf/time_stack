@@ -6,7 +6,7 @@
 	      th Start date
 	      th End date
 	      th Status
-	      -if allow_weekly_hours() == true
+	      -if current_user.customer.allow_weekly_hours?
 	      	th Weekly Entry
 	      th Report
 	      th Copy from the <br> previous week/ Clear
@@ -19,7 +19,7 @@
 	        td = week.start_date.strftime('%Y-%m-%d')
 	        td = week.end_date.strftime('%Y-%m-%d')
 	        td = link_to find_status(week), find_status(week) == "NEW" || "REJECTED" ?  edit_week_path(week): week_path(week) 
-	        -if allow_weekly_hours() == true
+	        -if current_user.customer.allow_weekly_hours?
 			    td 
 			    	- if week.status_id == 1 ||  week.status_id == 4 || week.status_id == 5
 			    		= link_to "#{total_hours(week)}", 'javascript:void(0);', class: "week_time_entry", id: "#{week.id}"

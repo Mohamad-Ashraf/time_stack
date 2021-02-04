@@ -34,18 +34,7 @@ module WeeksHelper
       end
     end
     @hours_sum.round(1)
-  end
- 
- def allow_weekly_hours
-  @customer_details = Customer.where(user_id: current_user.id, allow_weekly_hours: true)
-
-  if @customer_details.present?
-     return true
-  else
-     return false;
-  end
-
- end
+  end 
 
   def current_week_available(current_user)
     #logger.debug "weeks_helper - current_week_available - See if current user #{current_user.email}, has time entered for this week."
