@@ -4,11 +4,13 @@ div class=' alert' id="configuration-alert" style="padding: 20px; background:#ff
 
 	table.configuration_table
 		tr 			
-			td = check_box_tag 'allow_weekly_hours' 
+			td = check_box_tag :allow_weekly_hours, true, checked = current_user.customer.allow_weekly_hours? ? true : false				
+			
 			td 
-				lable style="float:left;text-align:left;"  Allow weekly summary hours
+				lable style="float:left;text-align:left;"  Allow weekly summary hours 
 		tr 			
-			td = check_box_tag 'allow_submit_hours_last_dayofweek' 
+			td = check_box_tag :allow_submit_hours_last_dayofweek, true, checked = current_user.customer.allow_submit_hours_last_dayofweek? ? true : false 
+			
 			td  
 				lable style="float:left;text-align:left;"  Allow submit hours every last day of the week
 
