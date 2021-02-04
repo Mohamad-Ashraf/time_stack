@@ -104,6 +104,20 @@ class CustomersController < ApplicationController
     end
   end
 
+  def add_configuration_customers
+    
+      @configuration = Customer.where(id: current_user.customer_id).first
+      if @configuration.present? 
+        @configuration.allow_weekly_hours = params[:allow_weekly_hours].present? ? params[:allow_weekly_hours] : false
+        @configuration.allow_submit_hours_last_dayofweek = params[:allow_submit_hours_last_dayofweek].present? ? params[:allow_submit_hours_last_dayofweek] : false
+        @configuration.save
+        @addConfMass = 'Successfully add configuration !'
+      end           
+    respond_to do |format|
+      format.js {render :file => "customers/add_configuration.js.erb" }
+    end  
+  end
+
   # PATCH/PUT /customers/1
   # PATCH/PUT /customers/1.json
   def update

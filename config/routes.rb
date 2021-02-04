@@ -102,6 +102,7 @@ Rails.application.routes.draw do
   get '/dynamic_project_update' => 'projects#dynamic_project_update'
   get '/dynamic_customer_update' => 'customers#dynamic_customer_update'
   post '/add_configuration' => 'projects#add_configuration', as: :add_configuration
+  post '/add_configuration_customers' => 'customers#add_configuration_customers', as: :add_configuration_customers
   get '/remove_configuration' => 'projects#remove_configuration', as: :remove_configuration
   get '/refresh_task' => 'projects#refresh_task'
   
@@ -114,6 +115,7 @@ Rails.application.routes.draw do
   get 'projects/:id/reject/:week_id' => 'projects#reject'
   get 'show_project_reports' => 'projects#show_project_reports'
   post 'add_multiple_users_to_project' => "projects#add_multiple_users_to_project"
+  post '/check_project_to_create_update' => 'projects#check_project_to_create_update'
   post 'remove_multiple_users_from_project' => "projects#remove_multiple_users_from_project"
   post 'shift_modal' => "projects#shift_modal"
   get 'show_shift_reports' => "shifts#show_shift_reports"
@@ -238,6 +240,8 @@ Rails.application.routes.draw do
   post "project/:project_id/add_adhoc_pm" => "projects#add_adhoc_pm", as: :add_adhoc_pm
   post "customer/:customer_id/add_adhoc_pm_by_cm" => "customers#add_adhoc_pm_by_cm", as: :add_adhoc_pm_by_cm
   get "/copy_timesheet/:id" => "weeks#copy_timesheet"
+  post "/time_entry_week_hours" => "weeks#time_entry_week_hours"
+  
   get "/show_all_projects" => "projects#show_all_projects"
   post "assign_employment_types/" => "customers#assign_employment_types", as: :assign_employment_types
   post "assign_pm/:id" => "customers#assign_pm", as: :assign_pm

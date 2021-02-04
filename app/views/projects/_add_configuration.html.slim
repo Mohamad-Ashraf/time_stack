@@ -3,7 +3,21 @@ h1 Projects
 p By setting up and allowing Chronstack your specific external systems credential. 
 p This will allow projects to automatically populate and be modified within both.
 h6 New Configuration Setup
+-if @jira_projects_list.present?
+	#jiramodal.modal style="display:block;"
+		= form_tag check_project_to_create_update_path, id: "system_form", method: :post
+			== hidden_field_tag :customer_id, current_user.customer_id.present? ? current_user.customer_id : Customer.find_by_name("Resource Stack, Inc.").id
+			-if @jira_projects_list.present?
+				.model-body  style="width:30%;margin-left:32%;background:white;padding-top:30px;padding-bottom:30px;align-items:left;"
+						h4 style="margin-bottom:20px;" Select the Jira Projects to Import 
+						button.close type="button" id="spanclose" style="margin-top:-80px;padding-right:5px;color:red;"
+						  span aria-hidden="true"  &times;
 
+			 			- @jira_projects_list.each do |j|
+			 				=check_box_tag  "jira_projects_list_ids[#{j.id}]", j.id,false,style: "float:left;margin-left:75px;margin-right:2px;" 
+			 	   			lable style="float:left;text-align:left;" =j.name 
+			 	   			br
+						= submit_tag 'Import' , id: "submit_jira_project" 
 =form_tag add_configuration_path, id: "add_configuration_form", method: :post, remote: true
 
 	table.configuration_table
@@ -49,4 +63,39 @@ h6 Active External Systems
 h5 Accounting
 h5 Other
 
+javascript:
+	var modal = document.getElementById("jiramodal");
+	var jira_submit = document.getElementById("submit_jira_project")
+	var span = document.getElementById("spanclose");
+	//console.log("This IS :"span)
+	span.onclick = function(){
+	modal.style.display = "none";
+	}
 
+	jira_submit.onclick = function(){
+	modal.style.display = "none"
+	}
+
+	window.onclick = function(event) {
+ 	 if (event.target == modal) {
+    	modal.style.display = "none";
+  		}
+	}
+javascript:
+	var modal = document.getElementById("jiramodal");
+	var jira_submit = document.getElementById("submit_jira_project")
+	var span = document.getElementById("spanclose");
+	//console.log("This IS :"span)
+	span.onclick = function(){
+	modal.style.display = "none";
+	}
+
+	jira_submit.onclick = function(){
+	modal.style.display = "none"
+	}
+
+	window.onclick = function(event) {
+ 	 if (event.target == modal) {
+    	modal.style.display = "none";
+  		}
+	}
