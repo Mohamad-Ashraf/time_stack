@@ -1,0 +1,17 @@
+h1 Configuration	
+div class=' alert' id="configuration-alert" style="padding: 20px; background:#ffffff;color:green;display:none;"  	
+=form_tag add_configuration_customers_path, id: "add_configuration_customers_form", method: :post, remote: true
+
+	table.configuration_table
+		tr 			
+			td = check_box_tag 'allow_weekly_hours' 
+			td 
+				lable style="float:left;text-align:left;"  Allow weekly summary hours
+		tr 			
+			td = check_box_tag 'allow_submit_hours_last_dayofweek' 
+			td  
+				lable style="float:left;text-align:left;"  Allow submit hours every last day of the week
+
+		tr 			
+			td
+			td = submit_tag 'Submit', id: 'submit_configuration'
