@@ -32,6 +32,10 @@ every 15.minute do
   runner "UserDevice.send_shift_notification"
 end
 
+every 5.minute do
+  runner "UserDevice.send_estimate_time_out_notification"
+end
+
 every :friday, :at => "11:59 pm" do
   Rails.logger.debug "FRIDAY FRIDAY FRIDAY"
   runner "Week.weekly_time_entry_submit"
