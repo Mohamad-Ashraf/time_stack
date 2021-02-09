@@ -21,16 +21,19 @@ class UserDevice < ApplicationRecord
 
      def self.send_estimate_time_out_notification
         time_zone = 'Eastern Time (US & Canada)'
-        current_time = Time.now.in_time_zone(time_zone).time.strftime("%k:%M")
-        @time_entries = TimeEntry.where.not(estimated_time_out: nil).where("DATE(date_of_activity) = ?", Time.now.in_time_zone.strftime("%Y-%m-%d"))
+        current_time = Time.now.in_time_zone(time_zone).time#.strftime("%k:%M")
+        @time_entries = TimeEntry.where.not(estimated_time_out: nil).where("DATE(date_of_activity) = ?", Time.now.in_time_zone.strftime("%Y-%m-%d")).joins(:user=> :user_devices).select("time_entries.id as entry_id, week_id, project_id,task_id,users.id as user_id, user_devices.user_token as user_token")
         push_messages = []
         @time_entries.each do |time_entry_details|   
-            if current_time >= time_entry_details.estimated_time_out.strftime("%k:%M")
+            #if current_time >= time_entry_details.estimated_time_out.strftime("%k:%M")
+            if current_time >= time_entry_details.estimated_time_out
+                token = time_entry_details.time_entry_details  
                 push_messages.push({
-                    title: "Estimated time out notigication"
-                    sound: 'default'
-                    data: {entryID: time_entry_details.id,weekID: time_entry_details.week_id,projectID: time_entry_details.project_id,taskID: time_entry_details.task_id ,userID: current_user.id }
-                    body: "Notification body"
+                    to: token,
+                    title: "Estimated time out notification",
+                    sound: 'default',
+                    data: {entryID: time_entry_details.entry_id,weekID: time_entry_details.week_id,projectID: time_entry_details.project_id,taskID: time_entry_details.task_id ,userID: time_entry_details.user_id },
+                    body: "Estimated time out notification"
                 })
             end 
         end
@@ -40,7 +43,6 @@ class UserDevice < ApplicationRecord
     def self.send_shift_notification
         time_zone = 'Eastern Time (US & Canada)'
         check_start_time = Time.now.in_time_zone(time_zone).time
-
         week_day = check_start_time.wday
         if week_day == 0 || week_day == 6 #Sunday and Saturday
             return nil
