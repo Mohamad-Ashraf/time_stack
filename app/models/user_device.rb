@@ -19,6 +19,24 @@ class UserDevice < ApplicationRecord
         UserDevice.where("user_id != ? AND device_id=?",user_id,device_id).update_all(user_token: nil)
     end
 
+     def self.send_estimate_time_out_notification
+        time_zone = 'Eastern Time (US & Canada)'
+        current_time = Time.now.in_time_zone(time_zone).time.strftime("%k:%M")
+        @time_entries = TimeEntry.where.not(estimated_time_out: nil).where("DATE(date_of_activity) = ?", Time.now.in_time_zone.strftime("%Y-%m-%d"))
+        push_messages = []
+        @time_entries.each do |time_entry_details|   
+            if current_time >= time_entry_details.estimated_time_out.strftime("%k:%M")
+                push_messages.push({
+                    title: "Estimated time out notigication"
+                    sound: 'default'
+                    data: {entryID: time_entry_details.id,weekID: time_entry_details.week_id,projectID: time_entry_details.project_id,taskID: time_entry_details.task_id ,userID: current_user.id }
+                    body: "Notification body"
+                })
+            end 
+        end
+        UserDevice.handle_push_notifications(push_messages)
+    end
+
     def self.send_shift_notification
         time_zone = 'Eastern Time (US & Canada)'
         check_start_time = Time.now.in_time_zone(time_zone).time
