@@ -339,7 +339,7 @@ end
       ProjectShift.create(shift_id: params[:shift_id], capacity: nil, location: nil, shift_supervisor_id: current_user.id , project_id: params[:project_id])
       end
     end
-
+     @task_update_massage ='Task updated successfully!'
 	  @customers = Customer.all
     @tasks_on_project = Task.where(project_id: @project_id)
     @proxies = User.where("customer_id =? and proxy =?", @project.customer.id, true)
@@ -856,9 +856,7 @@ def add_configuration
           end
         end
       end          
-      unless @true_but_done.present?
-          @refresh_massage ='Task updated successfully!'
-      end
+     @refresh_massage ='Task refresh successfully!'
 
       @users_assignied_to_project = User.joins("LEFT OUTER JOIN projects_users ON users.id = projects_users.user_id AND projects_users.project_id = 1").select("users.email,first_name,email,users.id id,user_id, projects_users.project_id, projects_users.active,project_id")
       @tasks_on_project = Task.where(project_id: @project_id)
