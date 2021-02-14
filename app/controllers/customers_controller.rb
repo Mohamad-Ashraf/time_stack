@@ -73,6 +73,14 @@ class CustomersController < ApplicationController
     logger.debug("TRYING TO FIND CUSTOMER LOGGGGGOOOOOOOOOO: #{@customer.logo}")
   end
 
+
+  def usio_payment    
+    @customer = Customer.where(id: current_user.customer_id).first
+    @user= User.where(id: current_user.id).first
+    register_card = UsioPayment.register_new_card(params[:card_number],params[:card_type],params[:cvv],params[:exp_date],@customer.name,@customer.name,@user.email,@customer.address,@customer.city,@customer.state,@customer.zipcode)
+  end
+
+
   # POST /customers
   # POST /customers.json
   def create
