@@ -76,17 +76,8 @@ class UsioPayment< ApplicationRecord
  payload["MerchantID"] =  '0000000001'
  payload["Login"] =   "API0000000001"
  payload["Password"] = "Temp1234!"
- uri = URI.parse(url)
-http = Net::HTTP.new(uri.host,uri.port)
-http.use_ssl = true
-
-request = Net::HTTP::Post.new(uri, {'Content-Type' => 'application/json'})
-request.body = payload.to_json
- #request = Net::HTTP::Post.new(url, payload)
- debugger
- res = http.request(request)
- debugger
- #res = RequestHelper.make_post_request(url: url, payload: payload)
+ 
+ res = RequestHelper.make_post_request(url: url, payload: payload)
  result = {
  "Confirmation": "",
  "Message": "Failure.",

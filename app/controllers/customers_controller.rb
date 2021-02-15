@@ -36,7 +36,10 @@ class CustomersController < ApplicationController
       logger.debug("************User requesting VACATION: #{@vacation_requests.inspect} ")
       logger.debug("TRYING TO FIND CUSTOMER LOGGGGGOOOOOOOOOO: #{@customer.logo}")
       @current_systems = ExternalConfiguration.where(customer_id: @customer.id)
-      @terms_modal_show = current_user.terms_and_condition
+      @terms_modal_show = current_user.terms_and_condition      
+      @payment_detail = PaymentDetail.where(customer_id: current_user.customer_id)
+      @user_count = User.where(customer_id: current_user.customer_id).count      
+      @patment_count=@payment_detail.count
       @announcement = Announcement.where("active = true").last
       
     end
@@ -78,6 +81,37 @@ class CustomersController < ApplicationController
     @customer = Customer.where(id: current_user.customer_id).first
     @user= User.where(id: current_user.id).first
     register_card = UsioPayment.register_new_card(params[:card_number],params[:card_type],params[:cvv],params[:exp_date],@customer.name,@customer.name,@user.email,@customer.address,@customer.city,@customer.state,@customer.zipcode)
+
+    
+      if params[:id].present? 
+        @payment_detail = PaymentDetail.where(id: params[:id]).first
+        @payment_detail.card_number = params[:card_number].last(4)
+        @payment_detail.token = register_card[:token]
+        @payment_detail.card_type = params[:card_type]
+        @payment_detail.default_card = params[:default_card].present? ? params[:default_card] : false
+        @payment_detail.user_id=current_user.id
+        @payment_detail.customer_id=current_user.customer_id
+        @payment_detail.save
+        @payment_message = 'Successfully updated payment detail !'       
+      else
+        
+        @payment_detail = PaymentDetail.new
+        @payment_detail.card_number = params[:card_number].last(4)
+        @payment_detail.token = register_card[:token]
+        @payment_detail.card_type = params[:card_type]
+        @payment_detail.default_card = params[:default_card].present? ? params[:default_card] : false
+        @payment_detail.user_id=current_user.id
+        @payment_detail.customer_id=current_user.customer_id
+        @payment_detail.save
+        @payment_message = 'Successfully submited payment detail !'       
+
+      end
+      @payment_detail = PaymentDetail.where(customer_id: current_user.customer_id)
+      @user_count = User.where(customer_id: current_user.customer_id).count      
+      @patment_count= @payment_detail.count
+      respond_to do |format|
+      format.js
+    end    
   end
 
 
