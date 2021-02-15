@@ -1,5 +1,5 @@
 class UsioPayment< ApplicationRecord 
- @@REGISTRATION_AMOUNT = "0.00"
+ @@REGISTRATION_AMOUNT = "10.00"
  
  def self.register_new_card(card_number, card_type, cvv, exp_date, first_name, last_name, email, address, city, state, zip)
  payload = {
@@ -73,7 +73,7 @@ class UsioPayment< ApplicationRecord
  private 
  
  def self.make_api_request(url: "", payload: {})
- payload["MerchantID"] =  0000000001
+ payload["MerchantID"] =  '0000000001'
  payload["Login"] =   "API0000000001"
  payload["Password"] = "Temp1234!"
  uri = URI.parse(url)
@@ -83,7 +83,9 @@ http.use_ssl = true
 request = Net::HTTP::Post.new(uri, {'Content-Type' => 'application/json'})
 request.body = payload.to_json
  #request = Net::HTTP::Post.new(url, payload)
+ debugger
  res = http.request(request)
+ debugger
  #res = RequestHelper.make_post_request(url: url, payload: payload)
  result = {
  "Confirmation": "",

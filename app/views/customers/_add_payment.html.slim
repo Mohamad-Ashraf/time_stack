@@ -21,7 +21,7 @@ table class="table"
 				    br  
 				    br
 				    = label_tag "Expire Date",nil, :style=>"text-align: left;float:left;font-weight:bold;margin-left:22em;"
-				    = text_field_tag :exp_date, nil, :style =>"margin-left:10px;float:left;width:100px;",placeholder: "MMYYYY" ,label: false,class: "form-control",'data-mask': "00/0000",required: true
+				    = text_field_tag :exp_date, nil, :style =>"margin-left:10px;float:left;width:100px;",placeholder: "MMYYYY" ,label: false,class: "form-control",'data-mask': "000000",required: true
 				    = label_tag "CVV",nil, :style=>"text-align: left;float:left;font-weight:bold;margin-left:10px;"
 				    = text_field_tag :cvv, nil, :style =>"margin-left:10px;float:left;width:60px;" ,label: false,class: "form-control",'data-mask': "0000" ,required: true
 				    = label_tag "Card Type",nil, :style=>"float:left;font-weight:bold;margin-left:15px;"
