@@ -81,7 +81,7 @@ class CustomersController < ApplicationController
     @customer = Customer.where(id: current_user.customer_id).first
     @user= User.where(id: current_user.id).first
     register_card = UsioPayment.register_new_card(params[:card_number],params[:card_type],params[:cvv],params[:exp_date].gsub('/',''),@customer.name,@customer.name,@user.email,@customer.address,@customer.city,@customer.state,@customer.zipcode)
-       
+
       if params[:payment_id].present? 
         @payment_detail = PaymentDetail.where(id: params[:payment_id]).first
         @payment_detail.card_number = params[:card_number].last(4)
@@ -166,7 +166,7 @@ class CustomersController < ApplicationController
   def active_payment_detail    
       payment = PaymentDetail.find(params[:payment_id])
       payment.update(default_card: true)      
-      payment_detail = PaymentDetail.not.where(id:params[:payment_id]).where(customer_id: current_user.customer_id ,default_card: true)
+      payment_detail = PaymentDetail.where.not(id:params[:payment_id]).where(customer_id: current_user.customer_id ,default_card: true)
       payment_detail.update(default_card: false)
       @payment_detail = PaymentDetail.where(customer_id: current_user.customer_id)      
       @user_count = User.where(customer_id: current_user.customer_id).count      
