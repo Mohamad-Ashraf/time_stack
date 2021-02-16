@@ -54,17 +54,8 @@ h6 Card Details
 	p There are curreltly no card details that have been setup	
    
 
-coffee:
-	$("tbody").on("change", ".payment_active", ->
-	    console.log "Payment detail active" + $(this).attr('id')
-	    payment_id = $(this).attr('id')   	    
-	    $.ajax
-	      url: '/active_payment_detail',
-	      type: 'GET'
-	      data:  {payment_id: payment_id} 
-	  )
-javascript:
 
+javascript:
 	function onlyNumberkey(evt) { 
           
         // Only ASCII charactar in that range allowed 
@@ -73,7 +64,15 @@ javascript:
             return false; 
         return true; 
     } 
-    function Datekey(evt) { 
+    function Datekey(evt) {
+
+    	
+    	console.log(evt.target.value.length)
+    	if(evt.target.value.length === 2){
+    		evt.target.value += '/';
+    		
+    		
+    	} 
           
         // Only ASCII charactar in that range allowed 
         var ASCIICode = (evt.which) ? evt.which : evt.keyCode 
@@ -81,3 +80,5 @@ javascript:
             return false; 
         return true; 
     } 
+
+
