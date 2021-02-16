@@ -90,7 +90,7 @@ class CustomersController < ApplicationController
         @payment_detail.user_id=current_user.id
         @payment_detail.customer_id=current_user.customer_id
         @payment_detail.save
-        @payment_message = 'Successfully updated payment detail !'       
+        @payment_message = 'Payment details successfully updated!'       
       else        
         @payment_detail = PaymentDetail.new
         @payment_detail.card_number = params[:card_number].last(4)
@@ -100,7 +100,7 @@ class CustomersController < ApplicationController
         @payment_detail.user_id=current_user.id
         @payment_detail.customer_id=current_user.customer_id
         @payment_detail.save
-        @payment_message = 'Successfully submited payment detail !' 
+        @payment_message = 'Payment details successfully saved!' 
       end      
       @payment_detail = PaymentDetail.where(customer_id: current_user.customer_id)
       @user_count = User.where(customer_id: current_user.customer_id).count      

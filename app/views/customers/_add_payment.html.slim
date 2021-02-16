@@ -1,55 +1,48 @@
 h1 Payment	
+span class=' alert' id="payment-alert" style=""
+ 	- if @payment_message.present?
+ 		= @payment_message 	
+= form_tag usio_payment_path, id: "usio_payment_path_form", method: :post, remote: true
+ 	- if @payment.present?
+		= hidden_field_tag 'payment_id',@payment.id
+	table {style="border:1px;"}
+		tr
+			th Credit or Debit Cards
+			th Expiry Date
+			th CVV
+			th Card Type
+	  		th Active Users
 
-div class=' alert' id="payment-alert" style="padding: 20px; background:#ffffff;color:green;display:block;"
-				 -if @payment_message.present?
-				 	 = @payment_message 	
-table class="table"
-  		thead
-  		tbody
-  			tr
-  			  th
-			  	  =form_tag usio_payment_path, id: "usio_payment_path_form", method: :post, remote: true
-			  	  	-if  @payment.present?
-			  	  		= hidden_field_tag 'payment_id',@payment.id
-			  	  	= label_tag "Active Users",nil, :style=>"text-align: left;float:left;font-weight:bold;margin-left:20em;"				    
-				    = text_field_tag :active_user, nil, :style =>"margin-left:10px;;width:70px;height:30px;float:left" ,label: false,class: "form-control" , value: @user_count , readonly: true
-				    br
-				    br
-				    span style="font-weight:bolder;font-size:20px;margin-top:5px;float:left;margin-left:15em;" Credit or Debit Cards
-				    br
-				    br				    
-				    = text_field_tag :card_number, nil,placeholder: "Card Number", :style =>"margin-left:25em;float:left;width:15em;" ,label: false,class: "form-control",onkeypress: "return onlyNumberkey(event)",maxlength: 17,minlength: 14, required: true , value: @payment.present? ? "XXXX-XXXX-XXXX-#{@payment.card_number}": ""
-				    br
-				    br  
-				    br
-				    = label_tag "Expire Date",nil, :style=>"text-align: left;float:left;font-weight:bold;margin-left:22em;"
-				    = text_field_tag :exp_date, nil, :style =>"margin-left:10px;float:left;width:100px;",placeholder: "MM/YYYY" ,label: false,class: "form-control",onkeypress: "return Datekey(event)",minlength: 7,maxlength: 7,required: true
-				    = label_tag "CVV",nil, :style=>"text-align: left;float:left;font-weight:bold;margin-left:10px;"
-				    = text_field_tag :cvv, nil, :style =>"margin-left:10px;float:left;width:60px;" ,label: false,class: "form-control",onkeypress: "return onlyNumberkey(event)",maxlength: 4,minlength: 3,required: true
-				    = label_tag "Card Type",nil, :style=>"float:left;font-weight:bold;margin-left:15px;"
-				    = select_tag :card_type, options_for_select({"VISA" => "VISA", "Master Card" => "MSTR", "DISC" =>"DISC", "AMEX" => "AMEX"}, "VISA"), required: true,style: "float:left;margin-left:10px;"
-				    br
-				    br
-				    br				     
-				    = submit_tag "Add Card" ,style: "float:left;margin-left:32em;width:120px;"
-				    br
-				    br
+  		tr
+		    td= text_field_tag :card_number, nil, placeholder: "Card Number" ,label: false, class: "form-control", onkeypress: "return onlyNumberkey(event)",maxlength: 17,minlength: 14, required: true , value: @payment.present? ? "XXXX-XXXX-XXXX-#{@payment.card_number}": ""
 
-h6 Card Details
+		    td= text_field_tag :exp_date, nil,placeholder: "MM/YYYY" ,label: false,class: "form-control",onkeypress: "return Datekey(event)",minlength: 7,maxlength: 7,required: true
+		    
+		    td= text_field_tag :cvv, nil, label: false,class: "form-control",onkeypress: "return onlyNumberkey(event)",maxlength: 4,minlength: 3,required: true
+		    
+		    td= select_tag :card_type, options_for_select({"VISA" => "VISA", "Master Card" => "MSTR", "DISC" =>"DISC", "AMEX" => "AMEX"}, "VISA"), required: true
+			
+			td= text_field_tag :active_user, nil, label: false,class: "form-control" , value: @user_count , readonly: true
+		
+		tr
+			td= submit_tag "Save Card" ,style: "float:left;margin-left:32em;width:120px;"
+		   
+h5 Card Details
 -if @payment_detail.present?
-	table
-		tr.dark_row 
-			th (style= "width: 25%;") Card number
-			th (style= "width: 25%;") Card type
-			th (style= "width: 25%;") Active			
+	table.table
+		tr 
+			th Card number
+			th Card type
+			th Active
+			th Action			
 		- @payment_detail.each do |payment|
 			tr
 				td = "XXXX-XXXX-XXXX-#{payment.card_number}"
 				td = payment.card_type
 				td 
-					input id= "#{payment.id}" checked= payment.default_card  name="active"  class="payment_active" oncllick="javascript:void(0);" type="radio" 
-				td = link_to 'edit', edit_payment_details_path(payment_id: payment.id), remote: true
-				td = link_to 'Remove', remove_payment_details_path(payment_id: payment.id), remote: true
+					input id= "#{payment.id}" checked= payment.default_card  name="active"  class="payment_active" onclick="javascript:void(0);" type="radio" 
+				td =link_to 'Edit', edit_payment_details_path(payment_id: payment.id), remote: true
+				td= link_to 'Remove', remove_payment_details_path(payment_id: payment.id), remote: true
 - else
 	p There are curreltly no card details that have been setup	
    
