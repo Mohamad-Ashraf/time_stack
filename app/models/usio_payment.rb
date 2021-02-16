@@ -1,5 +1,5 @@
 class UsioPayment< ApplicationRecord 
- @@REGISTRATION_AMOUNT = "10.00"
+ @@REGISTRATION_AMOUNT = "0.00"
  
  def self.register_new_card(card_number, card_type, cvv, exp_date, first_name, last_name, email, address, city, state, zip)
  payload = {

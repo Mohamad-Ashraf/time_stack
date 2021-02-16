@@ -39,7 +39,7 @@ class CustomersController < ApplicationController
       @terms_modal_show = current_user.terms_and_condition      
       @payment_detail = PaymentDetail.where(customer_id: current_user.customer_id)
       @user_count = User.where(customer_id: current_user.customer_id).count      
-      @patment_count=@payment_detail.count
+      @payment_count=@payment_detail.count
       @announcement = Announcement.where("active = true").last
       
     end
@@ -80,21 +80,18 @@ class CustomersController < ApplicationController
   def usio_payment    
     @customer = Customer.where(id: current_user.customer_id).first
     @user= User.where(id: current_user.id).first
-    register_card = UsioPayment.register_new_card(params[:card_number],params[:card_type],params[:cvv],params[:exp_date],@customer.name,@customer.name,@user.email,@customer.address,@customer.city,@customer.state,@customer.zipcode)
-
-    
-      if params[:id].present? 
-        @payment_detail = PaymentDetail.where(id: params[:id]).first
+    register_card = UsioPayment.register_new_card(params[:card_number],params[:card_type],params[:cvv],params[:exp_date].gsub('/',''),@customer.name,@customer.name,@user.email,@customer.address,@customer.city,@customer.state,@customer.zipcode)
+       
+      if params[:payment_id].present? 
+        @payment_detail = PaymentDetail.where(id: params[:payment_id]).first
         @payment_detail.card_number = params[:card_number].last(4)
         @payment_detail.token = register_card[:token]
-        @payment_detail.card_type = params[:card_type]
-        @payment_detail.default_card = params[:default_card].present? ? params[:default_card] : false
+        @payment_detail.card_type = params[:card_type]        
         @payment_detail.user_id=current_user.id
         @payment_detail.customer_id=current_user.customer_id
         @payment_detail.save
         @payment_message = 'Successfully updated payment detail !'       
-      else
-        
+      else        
         @payment_detail = PaymentDetail.new
         @payment_detail.card_number = params[:card_number].last(4)
         @payment_detail.token = register_card[:token]
@@ -103,18 +100,17 @@ class CustomersController < ApplicationController
         @payment_detail.user_id=current_user.id
         @payment_detail.customer_id=current_user.customer_id
         @payment_detail.save
-        @payment_message = 'Successfully submited payment detail !'       
-
-      end
+        @payment_message = 'Successfully submited payment detail !' 
+      end      
       @payment_detail = PaymentDetail.where(customer_id: current_user.customer_id)
       @user_count = User.where(customer_id: current_user.customer_id).count      
-      @patment_count= @payment_detail.count
+      @payment_count=@payment_detail.count
       respond_to do |format|
-      format.js
-    end    
+      format.js {render :file => "customers/usio_payment.js.erb" }
+    end           
   end
 
-
+  
   # POST /customers
   # POST /customers.json
   def create
@@ -159,7 +155,31 @@ class CustomersController < ApplicationController
       format.js {render :file => "customers/add_configuration.js.erb" }
     end  
   end
+  def remove_payment_details   
+      payment = PaymentDetail.find(params[:payment_id])
+      payment.destroy
+      @payment_detail = PaymentDetail.where(customer_id: current_user.customer_id)      
+      @user_count = User.where(customer_id: current_user.customer_id).count      
+      @payment_count=@payment_detail.count
 
+  end
+  def active_payment_detail    
+      payment = PaymentDetail.find(params[:payment_id])
+      payment.update(default_card: true)      
+      payment_detail = PaymentDetail.not.where(id:params[:payment_id]).where(customer_id: current_user.customer_id ,default_card: true)
+      payment_detail.update(default_card: false)
+      @payment_detail = PaymentDetail.where(customer_id: current_user.customer_id)      
+      @user_count = User.where(customer_id: current_user.customer_id).count      
+      @payment_count=@payment_detail.count
+
+  end
+  
+  def edit_payment_details  
+    @payment = PaymentDetail.where(id: params[:payment_id]).first
+    @payment_detail = PaymentDetail.where(customer_id: current_user.customer_id)      
+    @user_count = User.where(customer_id: current_user.customer_id).count      
+    @payment_count=@payment_detail.count
+  end
   # PATCH/PUT /customers/1
   # PATCH/PUT /customers/1.json
   def update
