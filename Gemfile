@@ -23,7 +23,8 @@ gem 'coffee-rails'
 #gem 'therubyracer',  platforms: :ruby
 #session time out
 gem 'session_timeout_prompter'
-
+gem "passenger"
+gem "sqlite3"
 
 
 #for bell icon
