@@ -9,12 +9,15 @@ defaults: &defaults
 
 test: &test
   <<: *defaults
-  database: timestack_test
+  database: timestack
 
 development:
   <<: *defaults
-  database: timestack_development_2
+  database: timestack
 
+production:
+  <<: *defaults
+  database: timestack
 
 cucumber:
   <<: *test
