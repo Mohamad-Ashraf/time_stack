@@ -38,7 +38,7 @@ class CustomersController < ApplicationController
       @current_systems = ExternalConfiguration.where(customer_id: @customer.id)
       @terms_modal_show = current_user.terms_and_condition      
       @payment_detail = PaymentDetail.where(customer_id: current_user.customer_id)
-      @user_count = User.where(customer_id: current_user.customer_id).count      
+      @user_count = User.where(customer_id: current_user.customer_id, inactive_at: nil).count      
       @payment_count=@payment_detail.count
       @announcement = Announcement.where("active = true").last
       
@@ -103,7 +103,7 @@ class CustomersController < ApplicationController
         @payment_message = 'Payment details successfully saved!' 
       end      
       @payment_detail = PaymentDetail.where(customer_id: current_user.customer_id)
-      @user_count = User.where(customer_id: current_user.customer_id).count      
+      @user_count = User.where(customer_id: current_user.customer_id, inactive_at: nil).count      
       @payment_count=@payment_detail.count
       respond_to do |format|
       format.js {render :file => "customers/usio_payment.js.erb" }
@@ -159,7 +159,7 @@ class CustomersController < ApplicationController
       payment = PaymentDetail.find(params[:payment_id])
       payment.destroy
       @payment_detail = PaymentDetail.where(customer_id: current_user.customer_id)      
-      @user_count = User.where(customer_id: current_user.customer_id).count      
+      @user_count = User.where(customer_id: current_user.customer_id, inactive_at: nil).count      
       @payment_count=@payment_detail.count
 
   end
@@ -169,7 +169,7 @@ class CustomersController < ApplicationController
       payment_detail = PaymentDetail.where.not(id:params[:payment_id]).where(customer_id: current_user.customer_id ,default_card: true)
       payment_detail.update(default_card: false)
       @payment_detail = PaymentDetail.where(customer_id: current_user.customer_id)      
-      @user_count = User.where(customer_id: current_user.customer_id).count      
+      @user_count = User.where(customer_id: current_user.customer_id, inactive_at: nil).count      
       @payment_count=@payment_detail.count
 
   end
@@ -177,7 +177,7 @@ class CustomersController < ApplicationController
   def edit_payment_details  
     @payment = PaymentDetail.where(id: params[:payment_id]).first
     @payment_detail = PaymentDetail.where(customer_id: current_user.customer_id)      
-    @user_count = User.where(customer_id: current_user.customer_id).count      
+    @user_count = User.where(customer_id: current_user.customer_id, inactive_at: nil).count      
     @payment_count=@payment_detail.count
   end
   # PATCH/PUT /customers/1
